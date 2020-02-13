@@ -39,6 +39,7 @@ dev_dependencies:
   intl: ^0.15.7
   uuid:
   firebase_database:
+  flutter_typeahead: ^1.8.0
 
 
 
