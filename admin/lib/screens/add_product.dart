@@ -1,4 +1,5 @@
 //import 'dart:html';
+//import 'dart:html';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -7,7 +8,9 @@ import '../db/category.dart';
 import '../db/brand.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart'; // suggestion the words
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class AddProduct extends StatefulWidget {
   @override
@@ -19,6 +22,7 @@ class _AddProductState extends State<AddProduct> {
   BrandService _brandService = BrandService();
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController ProductNameController = TextEditingController();
+  TextEditingController quantityController = TextEditingController();
   List<DocumentSnapshot> brands = <DocumentSnapshot>[];
   List<DocumentSnapshot> categories = <DocumentSnapshot>[];
 
@@ -170,7 +174,7 @@ class _AddProductState extends State<AddProduct> {
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: TextFormField(
-                  controller: ProductNameController,
+                  controller: quantityController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                       hintText: 'Quantity'
@@ -255,7 +259,7 @@ class _AddProductState extends State<AddProduct> {
                 textColor: white,
                 child: Text('add product'),
                 onPressed: (){
-                  validateUpload();
+                  validateAndUpload();
                 },
               )
 
@@ -360,8 +364,20 @@ Widget _displayChild3() {
   }
 }
 
-  void validateUpload() {
-
+  void validateAndUpload() {
+    if(_formKey.currentState.validate()){
+      if(_image1 != null && _image2 != null && _image3 != null){
+        if(selectedSizes.isNotEmpty){
+          String imageUrl;
+          final String picture = "${DateTime.now().millisecondsSinceEpoch.toString()}.jpg";
+//          StorageUploadTask task = storage.ref()
+        }else{
+          Fluttertoast.showToast(msg: 'select atleast one size');
+        }
+      }else{
+        Fluttertoast.showToast(msg: 'All the images must be provided');
+      }
+    }
   }
 }
 
