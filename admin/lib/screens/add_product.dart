@@ -1,8 +1,12 @@
+//import 'dart:html';
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../db/category.dart';
 import '../db/brand.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class AddProduct extends StatefulWidget {
@@ -29,6 +33,10 @@ class _AddProductState extends State<AddProduct> {
   Color red = Colors.red;
 
   List<String> selectedSizes = <String>[];
+
+  File _image1;
+  File _image2;
+  File _image3;
 
   @override
   void initState(){
@@ -83,11 +91,10 @@ class _AddProductState extends State<AddProduct> {
                       padding: const EdgeInsets.all(8.0),
                       child: OutlineButton(
                         borderSide: BorderSide(color: grey.withOpacity(0.5), width: 2.5),
-                        onPressed: (){},
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(14,70,14,70),
-                          child: Icon(Icons.add, color: grey,),
-                        )
+                        onPressed: (){
+                          _selectImage(ImagePicker.pickImage(source: ImageSource.gallery),1);
+                        },
+                        child: _displayChild1()
                       ),
                     ),
                   ),
@@ -96,11 +103,10 @@ class _AddProductState extends State<AddProduct> {
                       padding: const EdgeInsets.all(8.0),
                       child: OutlineButton(
                           borderSide: BorderSide(color: grey.withOpacity(0.5), width: 2.5),
-                          onPressed: (){},
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(14,70,14,70),
-                            child: Icon(Icons.add, color: grey,),
-                          )
+                          onPressed: (){
+                            _selectImage(ImagePicker.pickImage(source: ImageSource.gallery),2);
+                          },
+                          child:_displayChild2()
                       ),
                     ),
                   ),
@@ -109,11 +115,11 @@ class _AddProductState extends State<AddProduct> {
                       padding: const EdgeInsets.all(8.0),
                       child: OutlineButton(
                           borderSide: BorderSide(color: grey.withOpacity(0.5), width: 2.5),
-                          onPressed: (){},
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(14,70,14,70),
-                            child: Icon(Icons.add, color: grey,),
-                          )
+                          onPressed: (){
+                            _selectImage(ImagePicker.pickImage(source: ImageSource.gallery),3);
+
+                          },
+                          child: _displayChild3()
                       ),
                     ),
                   ),
@@ -206,7 +212,7 @@ class _AddProductState extends State<AddProduct> {
                   Checkbox(value: selectedSizes.contains('28'), onChanged: (value)=>changeSelectedSize('28')),
                   Text('28'),
 
-                  Checkbox(value: selectedSizes.contains('30'), onChanged: (value)=>changeSelectedSize('32')),
+                  Checkbox(value: selectedSizes.contains('30'), onChanged: (value)=>changeSelectedSize('30')),
                   Text('30'),
 
                   Checkbox(value: selectedSizes.contains('32'), onChanged: (value)=>changeSelectedSize('32')),
@@ -248,7 +254,9 @@ class _AddProductState extends State<AddProduct> {
                 color: red,
                 textColor: white,
                 child: Text('add product'),
-                onPressed: (){},
+                onPressed: (){
+                  validateUpload();
+                },
               )
 
             ],
@@ -299,6 +307,61 @@ class _AddProductState extends State<AddProduct> {
       });
 
     }
+  }
+
+  void _selectImage(Future<File> pickImage, int imageNumber) async{
+    File tempImg = await pickImage;
+    switch(imageNumber){
+      case 1: setState(() => _image1=tempImg);
+      break;
+      case 2: setState(() => _image2=tempImg);
+      break;
+      case 3: setState(() => _image3=tempImg);
+      break;
+    }
+
+  }
+
+  Widget _displayChild1() {
+    if(_image1 == null){
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(14,70,14,70),
+        child: Icon(Icons.add, color: grey,),
+      );
+    }else{
+      return Image.file(_image1, fit: BoxFit.fill, width: double.infinity ,);
+
+    }
+  }
+
+
+Widget _displayChild2() {
+  if(_image2 == null){
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14,70,14,70),
+      child: Icon(Icons.add, color: grey,),
+    );
+  }else{
+    return Image.file(_image2 ,fit: BoxFit.fill, width: double.infinity );
+
+  }
+}
+
+
+Widget _displayChild3() {
+  if(_image3 == null){
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14,70,14,70),
+      child: Icon(Icons.add, color: grey,),
+    );
+  }else{
+    return Image.file(_image3, fit: BoxFit.fill, width: double.infinity );
+
+  }
+}
+
+  void validateUpload() {
+
   }
 }
 
