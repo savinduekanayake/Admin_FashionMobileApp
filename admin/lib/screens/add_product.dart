@@ -28,24 +28,37 @@ class _AddProductState extends State<AddProduct> {
   Color grey = Colors.grey;
   Color red = Colors.red;
 
+  List<String> selectedSizes = <String>[];
+
   @override
   void initState(){
     _getCatergories();
-//    _getBrands();
-    catergoriesDropDown = getCategoriesDropDown();
+    _getBrands();
+
 
 //    _currentCatergory = catergoriesDropDown[0].value;
   }
 
-   getCategoriesDropDown(){
+  List<DropdownMenuItem<String>> getCategoriesDropDown(){
     List<DropdownMenuItem<String>> items = new List();
     for(int i =0; i< categories.length; i++){
       setState(() {
-        catergoriesDropDown.insert(0, DropdownMenuItem(child: Text(categories[i]['category']),
-          value: categories[i]['category'],));
+        items.insert(0, DropdownMenuItem(child: Text(categories[i].data['category']),
+          value: categories[i].data['category'],));
       });
     }
-    print(items.length);
+    return items;
+  }
+
+  List<DropdownMenuItem<String>> getBandsDropDown(){
+    List<DropdownMenuItem<String>> items = new List();
+    for(int i =0; i< brands.length; i++){
+      setState(() {
+        items.insert(0, DropdownMenuItem(child: Text(brands[i].data['brand']),
+          value: brands[i].data['brand'],));
+      });
+    }
+    return items;
   }
 
   @override
@@ -128,72 +141,109 @@ class _AddProductState extends State<AddProduct> {
                   },
                 ),
               ),
-//        select category
-              Visibility(
-                visible: _currentCatergory != null || _currentCatergory == '',
-                child: Text(_currentCatergory ?? "null", style: TextStyle(color: red)),
-              ),
+
+            Row(
+                children: <Widget>[
+                  // select category
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('Category: ', style: TextStyle(color: red),),
+                  ),
+                  DropdownButton(items: catergoriesDropDown, onChanged: changeSelectedCategory, value: _currentCatergory,),
+
+                  // select brand
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('Brand: ', style: TextStyle(color: red),),
+                  ),
+                  DropdownButton(items: brandsDropDown, onChanged: changeSelectedBrand, value: _currentBrand,),
+                ]
+            ),
+
 
               Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TypeAheadField(
-                  textFieldConfiguration: TextFieldConfiguration(
-                      autofocus: false,
-                      decoration: InputDecoration(
-                        hintText: 'add category'
-                      )
+                padding: const EdgeInsets.all(12.0),
+                child: TextFormField(
+                  controller: ProductNameController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                      hintText: 'Quantity'
                   ),
-                  suggestionsCallback: (pattern) async {
-                    return await _categoryService.getSuggestions(pattern);
-                  },
-                  itemBuilder: (context, suggestion) {
-                    return ListTile(
-                      leading: Icon(Icons.category),
-                      title: Text(suggestion['category']),
-
-                    );
-                  },
-                  onSuggestionSelected: (suggestion) {
-                    setState(() {
-                      _currentCatergory = suggestion['category'];
-                    });
+                  validator: (value){
+                    if(value.isEmpty){
+                      return 'You must enther the product name';
+                    }
                   },
                 ),
               ),
 
- //         select brands
-              Visibility(
-                visible: _currentBrand != null || _currentBrand == '',
-                child: Text(_currentBrand ?? "null", style: TextStyle(color: red)),
+              Row(
+                children: <Widget>[
+                  Checkbox(value: selectedSizes.contains('XS'), onChanged: changeSelectedSize),
+                  Text('XS'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('S'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('M'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('L'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('XL'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('XXL'),
+
+                ],
               ),
 
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TypeAheadField(
-                  textFieldConfiguration: TextFieldConfiguration(
-                      autofocus: false,
-                      decoration: InputDecoration(
-                          hintText: 'add brand'
-                      )
-                  ),
-                  suggestionsCallback: (pattern) async {
-                    return await _brandService.getSuggestions(pattern);
-                  },
-                  itemBuilder: (context, suggestion) {
-                    return ListTile(
-                      leading: Icon(Icons.category),
-                      title: Text(suggestion['brand']),
+              Text('Available sizes'),
+              Row(
+                children: <Widget>[
+                  Checkbox(value: false, onChanged: null),
+                  Text('28'),
 
-                    );
-                  },
-                  onSuggestionSelected: (suggestion) {
-                    setState(() {
-                      _currentBrand = suggestion['brand'];
-                    });
-                  },
-                ),
+                  Checkbox(value: false, onChanged: null),
+                  Text('30'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('32'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('34'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('36'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('38'),
+                ],
               ),
+              Row(
+                children: <Widget>[
+                  Checkbox(value: false, onChanged: null),
+                  Text('40'),
 
+                  Checkbox(value: false, onChanged: null),
+                  Text('42'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('44'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('46'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('48'),
+
+                  Checkbox(value: false, onChanged: null),
+                  Text('50'),
+                ],
+              ),
+          // Button
               FlatButton(
                 color: red,
                 textColor: white,
@@ -213,12 +263,33 @@ class _AddProductState extends State<AddProduct> {
     print(data.length);
     setState(() {
       categories = data;
-      print(categories.length);
+      catergoriesDropDown = getCategoriesDropDown();
+      _currentCatergory = categories[0].data['category'];
+      print(_currentCatergory);
+    });
+  }
+
+  _getBrands() async{
+    List<DocumentSnapshot> data = await _brandService.getBrands();
+    print(data.length);
+    setState(() {
+      brands = data;
+      brandsDropDown = getBandsDropDown();
+      _currentBrand = brands[0].data['brand'];
+      print(_currentBrand);
     });
   }
 
   changeSelectedCategory(String selectedCategory) {
     setState(()=>_currentCatergory=selectedCategory);
+  }
+
+  changeSelectedBrand(String selectedbrand) {
+    setState(()=>_currentBrand=selectedbrand);
+  }
+
+  void changeSelectedSize(bool size) {
+
   }
 }
 
