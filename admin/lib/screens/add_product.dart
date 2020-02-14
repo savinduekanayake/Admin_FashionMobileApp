@@ -1,11 +1,14 @@
 //import 'dart:html';
 //import 'dart:html';
+import 'dart:ffi';
 import 'dart:io';
 
+import 'package:admin/db/product.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../db/category.dart';
 import '../db/brand.dart';
+import '../db/product.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart'; // suggestion the words
@@ -20,9 +23,11 @@ class AddProduct extends StatefulWidget {
 class _AddProductState extends State<AddProduct> {
   CategoryService _categoryService = CategoryService();
   BrandService _brandService = BrandService();
+  ProductService _productService = ProductService();
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  TextEditingController ProductNameController = TextEditingController();
+  TextEditingController productNameController = TextEditingController();
   TextEditingController quantityController = TextEditingController();
+  TextEditingController priceController = TextEditingController();
   List<DocumentSnapshot> brands = <DocumentSnapshot>[];
   List<DocumentSnapshot> categories = <DocumentSnapshot>[];
 
@@ -41,6 +46,8 @@ class _AddProductState extends State<AddProduct> {
   File _image1;
   File _image2;
   File _image3;
+
+  bool isLoading = false;
 
   @override
   void initState(){
@@ -86,7 +93,7 @@ class _AddProductState extends State<AddProduct> {
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          child: Column(
+          child: isLoading ? CircularProgressIndicator() : Column(
             children: <Widget>[
               Row(
                 children: <Widget>[
@@ -138,7 +145,7 @@ class _AddProductState extends State<AddProduct> {
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: TextFormField(
-                  controller: ProductNameController,
+                  controller: productNameController,
                   decoration: InputDecoration(
                     hintText: 'Product name'
                   ),
@@ -151,6 +158,7 @@ class _AddProductState extends State<AddProduct> {
                   },
                 ),
               ),
+
 
             Row(
                 children: <Widget>[
@@ -170,18 +178,37 @@ class _AddProductState extends State<AddProduct> {
                 ]
             ),
 
-
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: TextFormField(
                   controller: quantityController,
+
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
+//                    labelText: 'Quantity',
                       hintText: 'Quantity'
                   ),
                   validator: (value){
                     if(value.isEmpty){
-                      return 'You must enther the product name';
+                      return 'You must enter the product name';
+                    }
+                  },
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextFormField(
+
+                  controller: priceController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+//                    labelText: 'Price',
+                      hintText: 'Price'
+                  ),
+                  validator: (value){
+                    if(value.isEmpty){
+                      return 'You must enter the product price';
                     }
                   },
                 ),
@@ -329,7 +356,7 @@ class _AddProductState extends State<AddProduct> {
   Widget _displayChild1() {
     if(_image1 == null){
       return Padding(
-        padding: const EdgeInsets.fromLTRB(14,70,14,70),
+        padding: const EdgeInsets.fromLTRB(14,50,14,50),
         child: Icon(Icons.add, color: grey,),
       );
     }else{
@@ -342,7 +369,7 @@ class _AddProductState extends State<AddProduct> {
 Widget _displayChild2() {
   if(_image2 == null){
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14,70,14,70),
+      padding: const EdgeInsets.fromLTRB(14,50,14,50),
       child: Icon(Icons.add, color: grey,),
     );
   }else{
@@ -355,7 +382,7 @@ Widget _displayChild2() {
 Widget _displayChild3() {
   if(_image3 == null){
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14,70,14,70),
+      padding: const EdgeInsets.fromLTRB(14,50,14,50),
       child: Icon(Icons.add, color: grey,),
     );
   }else{
@@ -364,17 +391,53 @@ Widget _displayChild3() {
   }
 }
 
-  void validateAndUpload() {
+  void validateAndUpload() async{
     if(_formKey.currentState.validate()){
+      setState(() => isLoading = true);
       if(_image1 != null && _image2 != null && _image3 != null){
         if(selectedSizes.isNotEmpty){
-          String imageUrl;
-          final String picture = "${DateTime.now().millisecondsSinceEpoch.toString()}.jpg";
-//          StorageUploadTask task = storage.ref()
+
+          String imageUrl1;
+          String imageUrl2;
+          String imageUrl3;
+          final FirebaseStorage storage = FirebaseStorage.instance;
+
+          final String picture1 = "1${DateTime.now().millisecondsSinceEpoch.toString()}.jpg";
+          StorageUploadTask task1 = storage.ref().child(picture1).putFile(_image1);
+
+          final String picture2 = "2${DateTime.now().millisecondsSinceEpoch.toString()}.jpg";
+          StorageUploadTask task2 = storage.ref().child(picture2).putFile(_image2);
+
+          final String picture3 = "3${DateTime.now().millisecondsSinceEpoch.toString()}.jpg";
+          StorageUploadTask task3 = storage.ref().child(picture3).putFile(_image3);
+
+          StorageTaskSnapshot snapshot1 = await task1.onComplete.then((snapshot)=>snapshot);
+          StorageTaskSnapshot snapshot2 = await task2.onComplete.then((snapshot)=>snapshot);
+//          StorageTaskSnapshot snapshot1 = await task1.onComplete.then((snapshot)=>snapshot);
+          task3.onComplete.then((snapshot3) async{
+            imageUrl1 = await snapshot1.ref.getDownloadURL();
+            imageUrl2 = await snapshot2.ref.getDownloadURL();
+            imageUrl3 = await snapshot3.ref.getDownloadURL();
+            List<String> imageList = [imageUrl1,imageUrl2,imageUrl3];
+
+            _productService.uploadProduct(
+              productName: productNameController.text,
+              price: double.parse(priceController.text),
+              sizes: selectedSizes,
+              images: imageList,
+              quantity: int.parse(quantityController.text),
+            );
+            _formKey.currentState.reset();
+            setState(() => isLoading = false);
+            Fluttertoast.showToast(msg: 'Product added');
+            Navigator.pop(context);
+          });
         }else{
+          setState(() => isLoading = false);
           Fluttertoast.showToast(msg: 'select atleast one size');
         }
       }else{
+        setState(() => isLoading = false);
         Fluttertoast.showToast(msg: 'All the images must be provided');
       }
     }

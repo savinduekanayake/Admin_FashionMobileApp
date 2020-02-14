@@ -10,7 +10,7 @@ class CategoryService{
   String categoryId = id.v1();
 
 
-    _firestore.collection('categories').document(categoryId).setData({'category': name});
+    _firestore.collection(ref).document(categoryId).setData({'category': name});
   }
 
   Future<List<DocumentSnapshot>> getCategories()=>

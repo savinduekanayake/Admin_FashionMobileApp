@@ -12,7 +12,7 @@ class BrandService{
     var id = Uuid();
     String brandId = id.v1();
 
-    _firestore.collection('brands').document(brandId).setData({'brand': name});
+    _firestore.collection(ref).document(brandId).setData({'brand': name});
   }
 
   Future<List<DocumentSnapshot>> getBrands()=> _firestore.collection(ref).getDocuments()
